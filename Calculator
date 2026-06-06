@@ -1,0 +1,45 @@
+import os
+from dotenv import load_dotenv
+
+from langchain_groq import ChatGroq
+from langchain.tools import tool
+from langgraph.prebuilt import create_react_agent
+
+# Load ENV
+load_dotenv()
+
+# LLM
+llm = ChatGroq(
+    model="llama-3.1-8b-instant",
+    groq_api_key=os.getenv("GROQ_API_KEY"),
+    temperature=0
+)
+
+# TOOL
+@tool
+def calculator(expression: str) -> str:
+    """
+    Useful for solving math calculations.
+    """
+    try:
+        result = eval(expression)
+        return f"Answer: {result}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# AGENT
+agent = create_react_agent(
+    llm,
+    tools=[calculator]
+)
+
+while True:
+    user_input = input("You:")
+    if user_input.lower() == "exit":
+        break
+    try:
+        result=eval(user_input)
+        print(f"Answer: {result}")
+    except:
+        response = llm.invoke(user_input)
+        print("\nAI:", response.content)
